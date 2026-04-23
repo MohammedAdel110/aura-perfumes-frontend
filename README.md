@@ -18,10 +18,6 @@ A modern, elegant, and fully responsive landing page designed for a luxury perfu
 - **JavaScript:** For interactivity and animations.
 - **Google Fonts:** For elegant typography.
 
-## 📸 Screenshots
-![Desktop Version](URL_TO_YOUR_IMAGE)
-*Include screenshots of your project here to show it off!*
-
 ## 🏁 Getting Started
 To get a local copy up and running, follow these simple steps:
 
