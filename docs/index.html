@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA | Luxury Perfume</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Raleway:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --obsidian: #0a0a0f;
+            --gold: #c9a96e;
+            --ivory: #f5f0e8;
+            --rose: #e8c4b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--obsidian);
+            color: var(--ivory);
+            font-family: 'Raleway', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1, h2, h3, h4, .serif {
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        /* --- SCROLL ANIMATION WRAPPER --- */
+        .scroll-wrapper {
+            height: 600vh; /* Extra height to ensure smooth stages */
+            position: relative;
+        }
+
+        /* --- STICKY HERO --- */
+        .hero-sticky {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #1a1a24 0%, var(--obsidian) 100%);
+            perspective: 1000px;
+        }
+
+        /* Vignette and Bloom Overlays */
+        .vignette-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 30%, rgba(10, 10, 15, 0.9) 100%);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 5;
+            transition: opacity 0.1s;
+        }
+
+        .bloom-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, rgba(201, 169, 110, 0.15) 0%, transparent 60%);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 6;
+            transition: opacity 0.1s;
+        }
+
+        /* Ambient Light */
+        .ambient-light {
+            position: absolute;
+            width: 300px;
+            height: 500px;
+            background: radial-gradient(ellipse at center, rgba(201, 169, 110, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: 1;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: opacity 0.1s, transform 0.1s;
+        }
+
+        /* Bottle Container */
+        .bottle-container {
+            position: absolute;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            will-change: transform, opacity;
+            transform-origin: center 66px; /* Perfect nozzle center for precise zoom */
+            opacity: 0; /* Starts hidden */
+            transform: scale(0.5) translateY(50px);
+        }
+
+        .bottle-container.shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both infinite;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-2px, 0, 0); }
+            40%, 60% { transform: translate3d(2px, 0, 0); }
+        }
+
+        /* Bottle Elements */
+        .cap-svg {
+            width: 240px;
+            height: 120px;
+            margin-bottom: -66px; /* Overlap exactly to the collar */
+            z-index: 12;
+            will-change: transform, opacity;
+            position: relative;
+            transform-origin: 40% 100%; /* Hinge point at bottom left of cap rim */
+        }
+
+        .body-svg {
+            width: 240px;
+            height: 360px;
+            z-index: 11;
+            position: relative;
+            filter: drop-shadow(0 30px 40px rgba(0,0,0,0.8));
+        }
+
+        /* The nozzle tip - target for extreme zoom */
+        .nozzle-target {
+            position: absolute;
+            top: 75px; /* Align with top of bottle body */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px;
+            height: 10px;
+            background: transparent;
+            z-index: 13;
+        }
+
+        /* Particles Canvas */
+        #particles-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 15;
+            pointer-events: none;
+        }
+
+        /* Brand Reveal */
+        .brand-reveal {
+            position: absolute;
+            right: 15%;
+            top: 50%;
+            transform: translateY(-50%) translateX(50px);
+            opacity: 0;
+            z-index: 20;
+            text-align: left;
+            will-change: transform, opacity;
+            display: none; /* Hidden until stage 5 to avoid interfering */
+        }
+
+        .brand-name {
+            font-size: 5rem;
+            letter-spacing: 0.2em;
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+            display: flex;
+            text-transform: uppercase;
+        }
+
+        .brand-name span {
+            opacity: 0;
+            transform: translateY(20px);
+            display: inline-block;
+        }
+
+        .tagline {
+            font-size: 1.5rem;
+            font-style: italic;
+            color: var(--ivory);
+            font-weight: 300;
+            margin-bottom: 2rem;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 1rem 2.5rem;
+            background: transparent;
+            color: var(--ivory);
+            border: 1px solid rgba(201, 169, 110, 0.4);
+            font-family: 'Raleway', sans-serif;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(201, 169, 110, 0.2), transparent);
+            transition: all 0.6s ease;
+        }
+
+        .cta-button:hover {
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(201, 169, 110, 0.2);
+        }
+
+        .cta-button:hover::before {
+            left: 100%;
+        }
+
+        /* --- CONTENT BELOW HERO --- */
+        .content-section {
+            position: relative;
+            z-index: 30;
+            background-color: var(--obsidian);
+        }
+
+        /* Categories Section */
+        .categories-section {
+            padding: 8rem 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .category-card {
+            height: 450px;
+            border-radius: 8px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-end;
+            transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            border: 1px solid rgba(201, 169, 110, 0.1);
+        }
+
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to top, rgba(10,10,15,0.95) 0%, rgba(10,10,15,0.2) 60%, transparent 100%);
+            transition: background 0.5s ease;
+        }
+
+        .category-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(201, 169, 110, 0.3);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+        }
+
+        .category-card:hover::before {
+            background: linear-gradient(to top, rgba(10,10,15,0.98) 0%, rgba(10,10,15,0.4) 60%, rgba(10,10,15,0.1) 100%);
+        }
+
+        .category-content {
+            position: relative;
+            z-index: 2;
+            padding: 2.5rem;
+            width: 100%;
+            transform: translateY(30px);
+            transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .category-card:hover .category-content {
+            transform: translateY(0);
+        }
+
+        .category-content h3 {
+            font-size: 2.2rem;
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        .category-content p {
+            color: rgba(245, 240, 232, 0.8);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            transition-delay: 0.1s;
+        }
+
+        .category-card:hover .category-content p {
+            opacity: 1;
+        }
+
+        .btn-link {
+            display: inline-block;
+            color: var(--ivory);
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.8rem;
+            border-bottom: 1px solid var(--gold);
+            padding-bottom: 4px;
+            opacity: 0;
+            transition: all 0.5s ease;
+            transition-delay: 0.2s;
+        }
+
+        .btn-link:hover {
+            color: var(--gold);
+        }
+
+        .category-card:hover .btn-link {
+            opacity: 1;
+        }
+
+        /* Featured Grid */
+        .featured {
+            padding: 8rem 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 3rem;
+            color: var(--gold);
+            margin-bottom: 4rem;
+            font-weight: 400;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 3rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(201, 169, 110, 0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 3rem 2rem;
+            text-align: center;
+            border-radius: 4px;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(201, 169, 110, 0.4);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(201, 169, 110, 0.1);
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 60px;
+            margin: 0 auto 1.5rem;
+            fill: none;
+            stroke: var(--gold);
+            stroke-width: 1.5;
+        }
+
+        .card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: var(--ivory);
+            letter-spacing: 0.05em;
+        }
+
+        .card p {
+            color: rgba(245, 240, 232, 0.7);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            font-weight: 300;
+        }
+
+        /* Atmospheric Banner */
+        .banner {
+            height: 60vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .banner::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle at center, rgba(232, 196, 184, 0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(201, 169, 110, 0.05) 0%, transparent 40%);
+            animation: slowRotate 20s linear infinite;
+        }
+
+        @keyframes slowRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .quote {
+            font-size: 4rem;
+            text-align: center;
+            color: var(--ivory);
+            max-width: 800px;
+            padding: 0 20px;
+            z-index: 2;
+            line-height: 1.2;
+            font-weight: 300;
+        }
+
+        /* Newsletter & Footer */
+        .footer-wrapper {
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .newsletter {
+            padding: 6rem 20px;
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .newsletter h3 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .newsletter p {
+            color: rgba(245, 240, 232, 0.6);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .form-group input {
+            flex: 1;
+            padding: 1rem;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: var(--ivory);
+            font-family: 'Raleway', sans-serif;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--gold);
+        }
+
+        .form-group button {
+            padding: 0 2rem;
+            background: var(--ivory);
+            color: var(--obsidian);
+            border: none;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .form-group button:hover {
+            background: var(--gold);
+        }
+
+        footer {
+            padding: 2rem;
+            text-align: center;
+            color: rgba(245, 240, 232, 0.4);
+            font-size: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        footer .links a {
+            color: rgba(245, 240, 232, 0.6);
+            text-decoration: none;
+            margin: 0 10px;
+            transition: color 0.3s;
+        }
+
+        footer .links a:hover {
+            color: var(--gold);
+        }
+
+        @media (max-width: 768px) {
+            .brand-name { font-size: 3rem; }
+            .tagline { font-size: 1.2rem; }
+            .quote { font-size: 2.5rem; }
+            .form-group { flex-direction: column; }
+            .form-group button { padding: 1rem; }
+            footer { flex-direction: column; }
+            .brand-reveal {
+                right: 50%;
+                transform: translateY(-50%) translateX(50%) scale(0.8) !important;
+                text-align: center;
+                width: 100%;
+            }
+            .bottle-container.stage-5 {
+                transform: scale(0.6) translateX(-50%) translateY(-30%) !important;
+                opacity: 0.3 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scroll-wrapper">
+        <section class="hero-sticky">
+            <div class="vignette-overlay" id="vignette"></div>
+            <div class="bloom-overlay" id="bloom"></div>
+            <div class="ambient-light" id="ambientLight"></div>
+            
+            <div class="bottle-container" id="bottleContainer">
+                <div class="nozzle-target" id="nozzleTarget"></div>
+                <!-- Cap SVG -->
+                <svg class="cap-svg" id="cap" viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="obsidian-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#1a1a20" />
+                            <stop offset="30%" stop-color="#3a3a45" />
+                            <stop offset="50%" stop-color="#0a0a0f" />
+                            <stop offset="80%" stop-color="#2a2a35" />
+                            <stop offset="100%" stop-color="#050508" />
+                        </linearGradient>
+                        <linearGradient id="gold-rim" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#aa7c11" />
+                            <stop offset="50%" stop-color="#f3e5ab" />
+                            <stop offset="100%" stop-color="#d4af37" />
+                        </linearGradient>
+                    </defs>
+                    <!-- Cap Base Rim -->
+                    <rect x="80" y="90" width="40" height="10" fill="url(#gold-rim)" rx="2" />
+                    <!-- Heavy Obsidian Body -->
+                    <path d="M 82 10 L 118 10 C 119 10, 120 30, 120 90 L 80 90 C 80 30, 81 10, 82 10 Z" fill="url(#obsidian-grad)" />
+                    <!-- Reflection -->
+                    <path d="M 86 10 L 92 10 L 92 90 L 86 90 Z" fill="rgba(255,255,255,0.15)" />
+                </svg>
+
+                <!-- Body SVG -->
+                <svg class="body-svg" id="bottle" viewBox="0 0 200 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="glass-front" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="rgba(255,255,255,0.6)" />
+                            <stop offset="10%" stop-color="rgba(255,255,255,0.1)" />
+                            <stop offset="90%" stop-color="rgba(255,255,255,0.05)" />
+                            <stop offset="100%" stop-color="rgba(255,255,255,0.4)" />
+                        </linearGradient>
+                        <linearGradient id="liquid-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#b67a2a" />
+                            <stop offset="30%" stop-color="#d69f41" />
+                            <stop offset="50%" stop-color="#ebd197" />
+                            <stop offset="70%" stop-color="#d69f41" />
+                            <stop offset="100%" stop-color="#8c581a" />
+                        </linearGradient>
+                        <linearGradient id="glass-edge-left" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="rgba(255,255,255,0.8)" />
+                            <stop offset="100%" stop-color="rgba(255,255,255,0.1)" />
+                        </linearGradient>
+                        <linearGradient id="glass-edge-right" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="rgba(0,0,0,0.4)" />
+                            <stop offset="100%" stop-color="rgba(255,255,255,0.5)" />
+                        </linearGradient>
+                        <linearGradient id="silver-collar" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#555" />
+                            <stop offset="20%" stop-color="#ddd" />
+                            <stop offset="50%" stop-color="#fff" />
+                            <stop offset="80%" stop-color="#999" />
+                            <stop offset="100%" stop-color="#333" />
+                        </linearGradient>
+                        <linearGradient id="gold-plate" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#d4af37" />
+                            <stop offset="50%" stop-color="#aa7c11" />
+                            <stop offset="100%" stop-color="#f3e5ab" />
+                        </linearGradient>
+                        <filter id="glow">
+                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                            <feMerge>
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+
+                    <!-- Back Glass Layer -->
+                    <path d="M 40 70 L 160 70 L 170 280 L 30 280 Z" fill="rgba(10,10,15,0.5)" />
+                    <!-- Liquid Layer -->
+                    <path d="M 46 90 L 154 90 L 162 260 L 38 260 Z" fill="url(#liquid-gradient)" />
+                    
+                    <!-- Inner Glass Facets (Front) -->
+                    <path d="M 40 70 L 70 70 L 75 280 L 30 280 Z" fill="url(#glass-edge-left)" opacity="0.4" />
+                    <path d="M 130 70 L 160 70 L 170 280 L 125 280 Z" fill="url(#glass-edge-right)" opacity="0.5" />
+                    <path d="M 70 70 L 130 70 L 125 280 L 75 280 Z" fill="url(#glass-front)" opacity="0.3" />
+                    
+                    <!-- Thick Glass Base -->
+                    <path d="M 38 260 L 162 260 L 170 280 L 30 280 Z" fill="rgba(255,255,255,0.15)" />
+                    <!-- Reflections in base -->
+                    <path d="M 75 260 L 125 260 L 125 280 L 75 280 Z" fill="rgba(255,255,255,0.3)" />
+
+                    <!-- Golden Name Plate -->
+                    <rect x="70" y="140" width="60" height="40" rx="2" fill="url(#gold-plate)" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.4))" />
+                    <text x="100" y="164" font-family="'Cormorant Garamond', serif" font-size="12" font-weight="600" fill="#222" text-anchor="middle" letter-spacing="2">AURA</text>
+
+                    <!-- Metal Collar (Neck) -->
+                    <rect x="80" y="55" width="40" height="15" fill="url(#silver-collar)" rx="2" />
+                    <rect x="85" y="45" width="30" height="10" fill="url(#silver-collar)" rx="1" />
+                    <rect x="88" y="35" width="24" height="10" fill="url(#silver-collar)" />
+                    
+                    <!-- Pump Mechanism (Nozzle) -->
+                    <rect x="92" y="20" width="16" height="15" fill="url(#silver-collar)" rx="1" />
+                    <path d="M 90 15 L 110 15 C 112 15, 112 5, 110 5 L 90 5 C 88 5, 88 15, 90 15 Z" fill="url(#silver-collar)" />
+                    <circle cx="100" cy="10" r="1.5" fill="#111" id="nozzleHole" />
+
+                    <!-- Internal Pump Tube -->
+                    <rect x="98" y="70" width="4" height="190" fill="rgba(255,255,255,0.4)" />
+                    <rect x="99" y="70" width="1" height="190" fill="rgba(0,0,0,0.2)" />
+                    
+                    <!-- High-end Glass Reflections (Overlay) -->
+                    <path d="M 50 70 L 60 70 L 60 270 L 40 270 Z" fill="rgba(255,255,255,0.2)" filter="url(#glow)" />
+                    <path d="M 140 70 L 145 70 L 155 270 L 150 270 Z" fill="rgba(255,255,255,0.1)" />
+                </svg>
+            </div>
+
+            <canvas id="particles-canvas"></canvas>
+
+            <div class="brand-reveal" id="brandReveal">
+                <h1 class="brand-name" id="brandName">AURA</h1>
+                <p class="tagline" id="tagline">The essence of an unspoken promise.</p>
+                <a href="#collection" class="cta-button" id="ctaBtn">Discover the Collection</a>
+            </div>
+        </section>
+    </div>
+
+    <section class="content-section" id="collection">
+        <!-- Occasions / Categories -->
+        <div class="categories-section">
+            <h2 class="section-title">Discover by Occasion</h2>
+            <div class="category-grid">
+                <div class="category-card" style="background-image: url('images/hero.png')">
+                    <div class="category-content">
+                        <h3>Summer Radiance</h3>
+                        <p>Fresh, citrus, and aquatic notes for the warm, sunlit days.</p>
+                        <a href="#" class="btn-link">Explore Collection</a>
+                    </div>
+                </div>
+                <div class="category-card" style="background-image: url('images/product1.png')">
+                    <div class="category-content">
+                        <h3>Winter Warmth</h3>
+                        <p>Deep, spicy, and woody aromas for cold, intimate evenings.</p>
+                        <a href="#" class="btn-link">Explore Collection</a>
+                    </div>
+                </div>
+                <div class="category-card" style="background-image: url('images/product2.png')">
+                    <div class="category-content">
+                        <h3>Formal Elegance</h3>
+                        <p>Sophisticated and luxurious scents for special, unforgettable events.</p>
+                        <a href="#" class="btn-link">Explore Collection</a>
+                    </div>
+                </div>
+                <div class="category-card" style="background-image: url('images/product3.png')">
+                    <div class="category-content">
+                        <h3>Everyday Signatures</h3>
+                        <p>Subtle, comforting, and distinctive fragrances for daily wear.</p>
+                        <a href="#" class="btn-link">Explore Collection</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="featured">
+            <h2 class="section-title">The Signatures</h2>
+            <div class="grid">
+                <div class="card">
+                    <svg class="card-icon" viewBox="0 0 24 24">
+                        <path d="M8 8V6a4 4 0 018 0v2m-9 0h10a2 2 0 012 2v10a2 2 0 01-2 2H7a2 2 0 01-2-2V10a2 2 0 012-2z" />
+                    </svg>
+                    <h3>Velvet Oud</h3>
+                    <p>A mesmerizing blend of dark rose, smoked wood, and warm amber. For the mysterious and bold.</p>
+                </div>
+                <div class="card">
+                    <svg class="card-icon" viewBox="0 0 24 24">
+                        <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <h3>Lumière Noire</h3>
+                    <p>Sparkling bergamot entangled with night-blooming jasmine and white musk. Radiant yet deeply sensual.</p>
+                </div>
+                <div class="card">
+                    <svg class="card-icon" viewBox="0 0 24 24">
+                        <path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                    </svg>
+                    <h3>Champagne & Silk</h3>
+                    <p>An effervescent opening of pear and freesia settling into an intimate skin-scent of vanilla pod and cedar.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="banner">
+            <h2 class="quote">"A scent is a memory before it happens."</h2>
+        </div>
+
+        <div class="footer-wrapper">
+            <div class="newsletter">
+                <h3 class="serif">Join the Inner Circle</h3>
+                <p>Subscribe to receive privileged access to limited editions and private olfactory events.</p>
+                <div class="form-group">
+                    <input type="email" placeholder="Your email address">
+                    <button>Subscribe</button>
+                </div>
+            </div>
+
+            <footer>
+                <div class="copyright">
+                    &copy; 2026 AURA Parfums. All rights reserved.
+                </div>
+                <div class="links">
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                    <a href="#">Contact</a>
+                    <a href="#">Boutiques</a>
+                </div>
+            </footer>
+        </div>
+    </section>
+
+    <script>
+        // DOM Elements
+        const scrollWrapper = document.querySelector('.scroll-wrapper');
+        const bottleContainer = document.getElementById('bottleContainer');
+        const cap = document.getElementById('cap');
+        const vignette = document.getElementById('vignette');
+        const bloom = document.getElementById('bloom');
+        const ambientLight = document.getElementById('ambientLight');
+        const brandReveal = document.getElementById('brandReveal');
+        const brandName = document.getElementById('brandName');
+        const tagline = document.getElementById('tagline');
+        const ctaBtn = document.getElementById('ctaBtn');
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Setup Brand Name Animation Spans
+        const brandText = brandName.innerText;
+        brandName.innerHTML = '';
+        brandText.split('').forEach((char, i) => {
+            const span = document.createElement('span');
+            span.innerText = char;
+            span.style.transitionDelay = `${i * 0.1}s`;
+            span.style.transition = `opacity 0.8s ease ${i*0.1}s, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) ${i*0.1}s`;
+            brandName.appendChild(span);
+        });
+
+        // Resize Canvas
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Particle System
+        let particles = [];
+        let isSpraying = false;
+        let hasSprayed = false;
+
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                // Cone shape angle (-35 to +35 degrees upwards)
+                const angle = (Math.random() * 70 - 35) * (Math.PI / 180) - Math.PI / 2;
+                const speed = Math.random() * 8 + 4;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.size = Math.random() * 3 + 1;
+                this.life = Math.random() * 60 + 40; // frames
+                this.maxLife = this.life;
+                
+                // Colors: Gold, Rose, White
+                const colors = [
+                    'rgba(201, 169, 110, alpha)', // Gold
+                    'rgba(232, 196, 184, alpha)', // Rose
+                    'rgba(255, 255, 255, alpha)'  // White
+                ];
+                this.colorBase = colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.05; // slight gravity
+                this.vx *= 0.98; // friction
+                this.size *= 0.99; // shrink slightly
+                this.life--;
+            }
+
+            draw(ctx) {
+                const alpha = Math.max(0, this.life / this.maxLife);
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.colorBase.replace('alpha', alpha * 0.8);
+                ctx.fill();
+            }
+        }
+
+        function triggerSpray() {
+            if (isSpraying) return;
+            isSpraying = true;
+            hasSprayed = true;
+            
+            // Create particles
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2; // Assuming bottle center zoom is near center
+
+            for (let i = 0; i < 80; i++) {
+                // Stagger creation slightly for burst effect
+                setTimeout(() => {
+                    particles.push(new Particle(centerX, centerY));
+                }, Math.random() * 200);
+            }
+
+            animateParticles();
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let activeParticles = false;
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.update();
+                p.draw(ctx);
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                } else {
+                    activeParticles = true;
+                }
+            }
+
+            if (activeParticles) {
+                requestAnimationFrame(animateParticles);
+            } else {
+                isSpraying = false;
+            }
+        }
+
+        // Scroll Animation Logic
+        function updateAnimation() {
+            // Calculate progress (0 to 1) relative to scroll wrapper
+            const scrollY = window.scrollY;
+            const wrapperTop = scrollWrapper.offsetTop;
+            const wrapperHeight = scrollWrapper.offsetHeight;
+            const windowHeight = window.innerHeight;
+            
+            // Allow progress to go slightly above 1 for safe margins
+            let progress = (scrollY - wrapperTop) / (wrapperHeight - windowHeight);
+            progress = Math.max(0, Math.min(1, progress));
+
+            // Viewport dimensions for responsive scaling
+            const isMobile = window.innerWidth < 768;
+            const targetX = isMobile ? 0 : -30; // translateX percentage in stage 5
+
+            // Initial State Variables
+            let bScale = 0.5;
+            let bY = 50;
+            let bX = 0;
+            let bOpacity = 0;
+            let cY = 0;
+            let cRot = 0;
+            let cOpacity = 1;
+            let vOpacity = 0;
+            let blOpacity = 0;
+            let aLightOpacity = 0;
+            let aLightScale = 0.5;
+            let shake = false;
+
+            // STAGE 1: Reveal (0% - 15%)
+            if (progress < 0.15) {
+                const p = progress / 0.15;
+                bOpacity = p;
+                bScale = 0.5 + (0.5 * p); // 0.5 to 1.0
+                bY = 50 * (1 - p); // 50 to 0
+                aLightOpacity = p * 0.8;
+                aLightScale = 0.5 + (0.5 * p);
+                
+                // Reset stage 5 stuff
+                brandReveal.style.display = 'none';
+                hasSprayed = false;
+            }
+            // STAGE 2: Cap Lift (Hinges Open)
+            else if (progress >= 0.15 && progress < 0.40) {
+                const p = (progress - 0.15) / 0.25;
+                bOpacity = 1;
+                bScale = 1.0 + (0.1 * p); // 1.0 to 1.1
+                bY = 0;
+                
+                cY = 0; // Hinge stays in place
+                cRot = -135 * p; // Cap flips open to the left
+                
+                vOpacity = 0.6 * p; // Vignette darkens
+                aLightOpacity = 0.8;
+                aLightScale = 1;
+                brandReveal.style.display = 'none';
+                hasSprayed = false;
+            }
+            // STAGE 3: Nozzle Approach (40% - 65%)
+            else if (progress >= 0.40 && progress < 0.65) {
+                const p = (progress - 0.40) / 0.25;
+                bOpacity = 1;
+                
+                // Exponential scale for dramatic effect
+                // Easing function for smoother zoom
+                const easeInCubic = t => t * t * t;
+                const e = easeInCubic(p);
+                
+                bScale = 1.1 + (isMobile ? 12 : 18) * e; 
+                bY = 0; // Removing bY offset as transform-origin handles centering now
+                
+                cY = 0; 
+                cRot = -135; // Cap stays open
+                cOpacity = 1 - (p * 2); // Fade cap out as we zoom deep inside so it doesn't clip
+                
+                vOpacity = 0.6 + (0.4 * p); // Fully black background
+                aLightOpacity = 0.8 * (1 - p); // Ambient light fades out for drama
+                
+                if (p > 0.5) shake = true; // Shake before burst
+                brandReveal.style.display = 'none';
+                hasSprayed = false;
+            }
+            // STAGE 4: Spray Burst (65% - 85%)
+            else if (progress >= 0.65 && progress < 0.85) {
+                const p = (progress - 0.65) / 0.20;
+                bOpacity = 1;
+                bScale = (isMobile ? 13.1 : 19.1); // Hold max scale
+                bY = 0;
+                
+                cOpacity = 0;
+                vOpacity = 1;
+                
+                if (!hasSprayed && p > 0.05) {
+                    triggerSpray();
+                }
+                
+                // Bloom fades in and out
+                blOpacity = p < 0.5 ? (p * 2) : (1 - (p - 0.5) * 2);
+                brandReveal.style.display = 'none';
+            }
+            // STAGE 5: Brand Reveal (85% - 100%)
+            else if (progress >= 0.85) {
+                const p = (progress - 0.85) / 0.15;
+                
+                // Smooth easing back to normal scale
+                const easeOutQuad = t => t * (2 - t);
+                const e = easeOutQuad(p);
+                
+                bOpacity = 1;
+                bScale = (isMobile ? 13.1 : 19.1) - ((isMobile ? 12.1 : 18.1) * e); // Scale back down to 1
+                bY = 0;
+                
+                // Move bottle to the side
+                bX = targetX * e; // vw units or % depending on implementation. Using % of self here via translateX
+                
+                cOpacity = 0;
+                vOpacity = 1 - (0.5 * e); // Keep somewhat dark
+                blOpacity = 0;
+                
+                // Reveal Brand
+                brandReveal.style.display = 'block';
+                brandReveal.style.transform = isMobile 
+                    ? `translateY(-50%) translateX(50%) scale(0.8)` 
+                    : `translateY(-50%) translateX(${50 - (50 * e)}px)`;
+                brandReveal.style.opacity = e;
+                
+                const spans = brandName.querySelectorAll('span');
+                if (e > 0.5) {
+                    spans.forEach(span => {
+                        span.style.opacity = '1';
+                        span.style.transform = 'translateY(0)';
+                    });
+                    tagline.style.opacity = '1';
+                    tagline.style.transform = 'translateY(0)';
+                    tagline.style.transition = 'opacity 1s ease 0.8s, transform 1s ease 0.8s';
+                    
+                    ctaBtn.style.opacity = '1';
+                    ctaBtn.style.transform = 'translateY(0)';
+                    ctaBtn.style.transition = 'opacity 1s ease 1.2s, transform 1s ease 1.2s';
+                } else {
+                    spans.forEach(span => {
+                        span.style.opacity = '0';
+                        span.style.transform = 'translateY(20px)';
+                    });
+                    tagline.style.opacity = '0';
+                    tagline.style.transform = 'translateY(10px)';
+                    ctaBtn.style.opacity = '0';
+                    ctaBtn.style.transform = 'translateY(10px)';
+                }
+            }
+
+            // Apply Mutations
+            bottleContainer.style.transform = `translateX(${bX}%) translateY(${bY}px) scale(${bScale})`;
+            bottleContainer.style.opacity = bOpacity;
+            
+            if (shake) {
+                bottleContainer.classList.add('shake');
+            } else {
+                bottleContainer.classList.remove('shake');
+            }
+
+            // Responsive stage 5 positioning class override
+            if (progress >= 0.99 && isMobile) {
+                bottleContainer.classList.add('stage-5');
+            } else {
+                bottleContainer.classList.remove('stage-5');
+            }
+
+            cap.style.transform = `translateY(${cY}px) rotate(${cRot}deg)`;
+            cap.style.opacity = Math.max(0, cOpacity);
+
+            vignette.style.opacity = vOpacity;
+            bloom.style.opacity = blOpacity;
+            
+            ambientLight.style.opacity = aLightOpacity;
+            ambientLight.style.transform = `scale(${aLightScale})`;
+        }
+
+        // Initialize and listen
+        window.addEventListener('scroll', () => {
+            requestAnimationFrame(updateAnimation);
+        }, { passive: true });
+        
+        // Initial call
+        updateAnimation();
+
+    </script>
+</body>
+</html>
