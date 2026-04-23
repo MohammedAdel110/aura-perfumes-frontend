@@ -3,7 +3,7 @@
 A modern, elegant, and fully responsive landing page designed for a luxury perfume brand. This project focuses on high-end typography, smooth transitions, and a premium user experience to showcase fragrance collections.
 
 ## 🚀 Live Demo
-[Click here to view the live site]([YOUR_GITHUB_PAGES_LINK_HERE](https://mohammedadel110.github.io/aura-perfumes-frontend/))
+[Click here to view the live site]([(https://mohammedadel110.github.io/aura-perfumes-frontend/)])
 
 ## ✨ Features
 - **Premium UI:** Sophisticated design with a focus on luxury aesthetics.
